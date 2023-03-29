@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chatbot</title>
+    <link rel="stylesheet" type="text/css" href="static/style.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="sidebar">
+        <h2>Chat History</h2>
+        <ul id="chat-history"></ul>
+       
+        <button id="new-chat-btn">New Chat</button>
+        <button id="toggle-theme-btn" class="toggle-theme-btn">Theme change</button>
+      </div>
+      <div class="chatbox-container">
+        <h2>Chat GPT</h2>
+        <div id="chat-box" class="chat-box"></div>
+        <form id="chat-form" class="chat-form">
+          <input type="text" id="user-input" class="user-input" placeholder="Type your message here" />
+          <button type="submit" id="submit-btn" class="submit-btn">Send</button>
+        </form>
+      </div>
+    </div>
+  
+
+    <script>
+     const chatBox = document.getElementById("chat-box");
+const chatForm = document.getElementById("chat-form");
+const userInput = document.getElementById("user-input");
+const submitBtn = document.getElementById("submit-btn");
+const chatHistory = document.getElementById("chat-history");
+const newChatBtn = document.getElementById("new-chat-btn");
+const toggleThemeBtn = document.getElementById("toggle-theme-btn");
+
+// Initialize chat history array
+let chatHistoryArr = [];
+
+chatForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const userInputValue = userInput.value;
+  userInput.value = "";
+  chatBox.innerHTML += `
+    <div class="chat-message user-message">
+      <p class="message-text">${userInputValue}</p>
+    </div>
+  `;
+  fetch("/get_response", {
+  method: "POST",
+  body: new URLSearchParams({
+    text: userInputValue,
+  }),
+})
+  .then((response) => response.text())
+  .then((data) => {
+    const aiMessage = document.createElement("div");
+    aiMessage.classList.add("chat-message", "ai-message");
+    aiMessage.innerHTML = `
+    <div class="message-content">
+        <div class="message-content bg-black rounded-md mb-4">
+           <button class="copy-btn">
+          <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+          Copy</button>
+
+        <p class="message-text">
+          
+          ${data}</p></div>
+       
+      </div>
+    `;
+    const copyBtn = aiMessage.querySelector(".copy-btn");
+    copyBtn.addEventListener("click", () => {
+      const messageText = aiMessage.querySelector(".message-text");
+      navigator.clipboard.writeText(messageText.innerText);
+    });
+    chatBox.appendChild(aiMessage);
+  });
+
+  // Store the first user input of the current chat in chat history array
+  if (chatHistoryArr.length === 0) {
+    chatHistoryArr.push(userInputValue);
+  }
+});
+
+newChatBtn.addEventListener("click", () => {
+  // Add the first user input of the current chat to chat history box
+  if (chatHistoryArr.length > 0) {
+    const firstUserInput = chatHistoryArr[0];
+    const chatHistoryItem = document.createElement("li");
+    chatHistoryItem.innerText = `User: ${firstUserInput}`;
+    chatHistory.appendChild(chatHistoryItem);
+  }
+
+  // Reset chat box and chat history array
+  chatBox.innerHTML = "";
+  chatHistoryArr = [];
+});
+
+toggleThemeBtn.addEventListener("click", () => {
+  document.body.classList.toggle("dark-theme");
+});
+
+// Add event listener for copy button
+chatBox.addEventListener("click", (e) => {
+  if (e.target.classList.contains("copy-btn")) {
+    const messageText = e.target.parentNode.querySelector(".message-text").textContent;
+    navigator.clipboard.writeText(messageText);
+  }
+});
+
+    </script>
+  </body>
+</html>

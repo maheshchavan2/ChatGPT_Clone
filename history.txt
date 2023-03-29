@@ -1,0 +1,8 @@
+
+You: what is current year
+AI: 
+The current year is 2020.
+#####
+You:                        The current year is 2020.
+AI:  Is there anything else I can do for you?
+#####
